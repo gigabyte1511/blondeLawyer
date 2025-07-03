@@ -1,0 +1,39 @@
+{
+    "name": "api",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "build": "tsc",
+        "start": "node build/index.js",
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "watch": "babel-watch --inspect=0.0.0.0:9229 --extensions .ts -- ./src/app/index.ts"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@koa/cors": "^5.0.0",
+        "config": "^3.3.12",
+        "koa": "^2.15.3",
+        "koa-bodyparser": "^4.4.1",
+        "koa-router": "^12.0.1",
+        "objection": "^3.1.5",
+        "pg": "^8.12.0",
+        "yup": "^1.5.0"
+    },
+    "devDependencies": {
+        "@babel/cli": "^7.24.8",
+        "@babel/core": "^7.24.9",
+        "@babel/node": "^7.24.8",
+        "@babel/preset-env": "^7.24.8",
+        "@babel/preset-typescript": "^7.24.7",
+        "@types/config": "^3.3.4",
+        "@types/koa": "^2.15.0",
+        "@types/koa-bodyparser": "^4.3.12",
+        "@types/koa-router": "^7.4.8",
+        "babel-plugin-add-module-exports": "^1.0.4",
+        "babel-plugin-module-resolver": "^5.0.2",
+        "babel-watch": "^7.8.1",
+        "typescript": "^5.5.3"
+    }
+}

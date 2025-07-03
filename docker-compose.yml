@@ -1,0 +1,48 @@
+# volumes:
+#     ikev2-vpn-data:
+
+services:
+
+    api:
+        container_name: blondeLawyer_api
+        platform: linux/amd64
+        build:
+            context: ./api
+            dockerfile: Dockerfile
+        ports:
+            - "3000:3000"
+            - "9230:9230"
+        environment:
+            NODE_ENV: development
+        command: >
+            sh -c "
+            cd /var/app/ &&
+            npm install -g bunyan knex &&
+            npm install &&
+            npx knex migrate:latest &&
+            npx knex seed:run &&
+            npm run watch | bunyan"
+        volumes:
+            # - ikev2-vpn-data:/etc/ipsec.d
+            - ./api:/var/app/:rw
+            - /var/app/node_modules
+            # - /var/run/docker.sock:/var/run/docker.sock
+        depends_on:
+            postgres:
+                condition: service_healthy
+    
+    postgres:
+        container_name: blondeLawyer_postgres
+        platform: linux/amd64
+        environment:
+            POSTGRES_PASSWORD: "${PG_PASSWD:-db_pass}"
+            POSTGRES_USER: "${PG_USER:-db_user}"
+            POSTGRES_DB: "${PG_DATABASE:-db_api}"
+        image: mdillon/postgis:11
+        healthcheck:
+            test: "psql -c 'SELECT 1' db_api db_user"
+            interval: 5s
+            timeout: 10s
+            retries: 3
+        ports:
+            - "5434:5432"
