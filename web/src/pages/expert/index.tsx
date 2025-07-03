@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 
 // Home page component
 export function ExpertHomePage() {
-  const navigate = useNavigate();
+//   const navigate = useNavigate();
   
   return (
     <div className="flex min-h-svh flex-col gap-3 p-2">
@@ -20,12 +20,12 @@ export function ExpertHomePage() {
         className="rounded-lg border shadow-sm"
       />
       <div className="flex flex-col gap-2 min-w-25">
-        <Button onClick={() => navigate("/consultationDetails")} >10:00</Button>
+        {/* <Button onClick={() => navigate("/consultationDetails")} >10:00</Button>
         <Button onClick={() => navigate("/consultationDetails")} >11:00</Button>
         <Button onClick={() => navigate("/consultationDetails")} >13:00</Button>
         <Button onClick={() => navigate("/consultationDetails")} >14:00</Button>
         <Button onClick={() => navigate("/consultationDetails")} >15:00</Button>
-        <Button onClick={() => navigate("/consultationDetails")} >15:00</Button>
+        <Button onClick={() => navigate("/consultationDetails")} >15:00</Button> */}
       </div>
       </div>
       
