@@ -27,6 +27,8 @@ services:
             - ./api:/var/app/:rw
             - /var/app/node_modules
             # - /var/run/docker.sock:/var/run/docker.sock
+        networks:
+            - nginx_shared
         depends_on:
             postgres:
                 condition: service_healthy
@@ -46,3 +48,9 @@ services:
             retries: 3
         ports:
             - "5434:5432"
+        networks:
+            - nginx_shared
+
+networks:
+  nginx_shared:
+    external: true
