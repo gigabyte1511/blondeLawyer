@@ -16,6 +16,7 @@ exports.up = function (knex) {
             .inTable("customers")
             .onDelete("CASCADE")
         table.text("type").notNullable();
+        table.text("status").notNullable();
         table.text("message").nullable();
         table.timestamp("scheduled_for").notNullable();
         table.timestamp("created_at").defaultTo(knex.fn.now());

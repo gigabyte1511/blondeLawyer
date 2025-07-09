@@ -6,11 +6,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 
 // Home page component
 export function ExpertHomePage() {
-//   const navigate = useNavigate();
+  const navigate = useNavigate();
   
   return (
     <div className="flex min-h-svh flex-col gap-3 p-2">
-      <h1 className="text-2xl font-bold p-2">Мои записи</h1>
       <div className="flex items-center gap-10">
       <Calendar
         mode="single"
@@ -20,12 +19,12 @@ export function ExpertHomePage() {
         className="rounded-lg border shadow-sm"
       />
       <div className="flex flex-col gap-2 min-w-25">
-        {/* <Button onClick={() => navigate("/consultationDetails")} >10:00</Button>
+        <Button onClick={() => navigate("/consultationDetails")} >10:00</Button>
         <Button onClick={() => navigate("/consultationDetails")} >11:00</Button>
         <Button onClick={() => navigate("/consultationDetails")} >13:00</Button>
         <Button onClick={() => navigate("/consultationDetails")} >14:00</Button>
         <Button onClick={() => navigate("/consultationDetails")} >15:00</Button>
-        <Button onClick={() => navigate("/consultationDetails")} >15:00</Button> */}
+        <Button onClick={() => navigate("/consultationDetails")} >16:00</Button>
       </div>
       </div>
       
@@ -34,20 +33,18 @@ export function ExpertHomePage() {
         <CardTitle>На сегодня</CardTitle>
       </CardHeader>
             <div className="flex flex-col gap-3 p-2">
-                <div className="bg-gray-200 rounded-sm p-3">
-                    <div className="flex justify-between">
-                        <div>
+                <Button variant="outline" className="bg-gray-200 pt-7 pb-7 rounded-sm flex justify-between" onClick={() => navigate("/consultation")}>
+                        <div className="text-left">
                             <div>
                                 Консультация
                             </div>
                             <CardDescription>Статус: Подтверждено</CardDescription>
                         </div>
-                        <div className="flex flex-col">
+                        <div className="text-right">
                             <div>25 марта, 10:00</div>
                             <CardDescription>Denis Gabets</CardDescription>
                         </div>  
-                    </div>
-                </div>
+                </Button>
                 <div className="bg-gray-200 rounded-sm p-3">
                     <div className="flex justify-between">
                         <div>

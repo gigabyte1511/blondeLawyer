@@ -29,6 +29,7 @@
         "@babel/preset-typescript": "^7.24.7",
         "@types/config": "^3.3.4",
         "@types/koa": "^2.15.0",
+        "@types/koa__cors": "^5.0.0",
         "@types/koa-bodyparser": "^4.3.12",
         "@types/koa-router": "^7.4.8",
         "babel-plugin-add-module-exports": "^1.0.4",

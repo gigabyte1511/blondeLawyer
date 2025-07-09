@@ -18,7 +18,7 @@ export function ConsultationDetails() {
   const navigate = useNavigate();
   
   return (
-    <div className="flex flex-col gap-5 p-150">
+    <div className="flex flex-col gap-5">
       <h1 className="text-2xl font-bold pl-2">Консультация №1</h1>
       <Card className="pt-3 pb-1">
         <CardHeader>
