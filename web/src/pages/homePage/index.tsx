@@ -11,7 +11,7 @@ import { useEffect } from "react";
 export function HomePage() {
   const navigate = useNavigate();
   const { user, userId, username, firstName, lastName } = useTelegram();
-  const test = "expert1";
+  const test = "expert";
   
   useEffect(() => {
     if (user) {
