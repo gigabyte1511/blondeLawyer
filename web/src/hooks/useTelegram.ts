@@ -86,7 +86,9 @@ export const useTelegram = () => {
     console.log("isDev", isDev)
     // Get actual Telegram WebApp or create a mock if in development
     // const tg = window.Telegram?.WebApp || (isDev ? createMockTelegramWebApp() : null);
-    const tg = createMockTelegramWebApp();
+
+    const tg = window.Telegram?.WebApp
+    // const tg = createMockTelegramWebApp();
 
     if (tg) {
       setWebApp(tg);
