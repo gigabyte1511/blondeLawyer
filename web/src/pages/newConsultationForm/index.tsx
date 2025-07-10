@@ -1,13 +1,12 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import type { FormEvent } from "react"
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox"
-import { toast } from "sonner"
-
 import {
     Select,
     SelectContent,
@@ -24,16 +23,92 @@ import { Textarea } from "@/components/ui/textarea";
 // Import API hooks
 import { useCreateConsultation } from "@/hooks/useApi";
 import { useExperts } from "@/hooks/useApi";
-import type { Consultation } from "@/api";
+import api, { type IConsultation } from "@/api";
+import { generateTimeSlots, getDatesWithConsultations } from "@/utils/consultations";
+import { toast } from "sonner";
+import config from "../../../config/default.json";
+import { useTelegram } from "@/hooks/useTelegram";
+
+// Interface for location state with pre-selected values
+interface LocationState {
+  preSelectedDate?: Date;
+  preSelectedTime?: string;
+  expertId?: number;
+}
+
+interface TimeSlot {
+  time: string;
+  available: boolean;
+}
 
 // New consultation form component
 export function NewConsultationForm() {
   const navigate = useNavigate();
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const location = useLocation();
+  const state = location.state as LocationState | undefined;
+  
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(state?.preSelectedDate);
+  const [selectedTime, setSelectedTime] = useState<string | null>(state?.preSelectedTime || null);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [comment, setComment] = useState<string>("");
   const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
+  const [expertId, setExpertId] = useState<number | undefined>(state?.expertId || config.mainExpertId);
+  const [availableTimeSlots, setAvailableTimeSlots] = useState<TimeSlot[]>([]);
+
+  const { telegramUser, webApp } = useTelegram();
+  
+  // Use Tanstack Query to fetch user by Telegram ID
+  const { data: userData, isLoading, error } = useQuery({
+    queryKey: ['user', telegramUser?.id],
+    queryFn: async () => {
+      if (!telegramUser?.id) return null;
+      try {
+        const response = await api.getUserByTelegramId(telegramUser.id);
+        return response.user;
+      } catch (err) {
+        console.error('Error fetching user:', err);
+        throw err;
+      }
+    },
+    enabled: !!telegramUser?.id, // Only run query when telegramUser.id exists
+  });
+  
+  // Fetch main expert's consultations
+  const { data: expertConsultations, isLoading: isLoadingExpert } = useQuery({
+    queryKey: ['consultations', 'expert', expertId],
+    queryFn: async () => {
+      try {
+        const response = await api.getConsultationsByExpert(expertId || config.mainExpertId);
+        return response;
+      } catch (err) {
+        console.error('Error fetching expert consultations:', err);
+        throw err;
+      }
+    },
+    select: (data) => {
+        return data.consultations
+    },
+  });
+  
+  // Update available time slots when date or expert consultations change
+  useEffect(() => {
+    if (selectedDate && expertConsultations) {
+      const slots = generateTimeSlots(selectedDate, expertConsultations);
+      setAvailableTimeSlots(slots);
+      
+      // If a time was pre-selected but is not available, clear it
+      if (selectedTime) {
+        const isTimeAvailable = slots.some(slot => 
+          slot.time === selectedTime && slot.available
+        );
+        
+        if (!isTimeAvailable) {
+          setSelectedTime(null);
+          toast.error("Выбранное время уже занято. Пожалуйста, выберите другое время.");
+        }
+      }
+    }
+  }, [selectedDate, expertConsultations, selectedTime]);
   
   // Check if form is valid
   const isFormValid = selectedDate && selectedTime && selectedTopic && termsAccepted;
@@ -58,18 +133,21 @@ export function NewConsultationForm() {
     }
     
     try {
-      // In a real app, we would get these IDs from the user context or selection
-      // For now, we'll use placeholder values
-      const consultationData: Consultation = {
-        expert_id: 1, // Placeholder - in a real app, this would come from selection
-        customer_id: 1, // Placeholder - in a real app, this would come from user context
+      // Use the expert ID from state or default to 1 (main expert)
+      const consultationData = {
+        expertId: expertId || 1, // Use pre-selected expert ID or default to 1
+        customerId: userData?.id, // In a real app, this would come from user context
         type: selectedTopic || "",
         message: comment,
-        scheduled_for: combinedDateTime
+        status: 'pending', // Default status for new consultations
+        scheduledFor: combinedDateTime.toISOString()
       };
       
       // Submit the consultation
-      await createConsultation.mutateAsync(consultationData);
+      const response = await createConsultation.mutateAsync(consultationData);
+      
+      // Get the created consultation ID
+      const consultationId = response.consultation?.id;
       
       // Show success message
       const formattedDate = combinedDateTime.toLocaleDateString('ru-RU', { 
@@ -85,14 +163,18 @@ export function NewConsultationForm() {
       
       toast("Консультация создана", {
         description: `${formattedDate} в ${formattedTime}`,
-        action: {
-          label: "Отменить",
-          onClick: () => console.log("Отмена"),
-        },
+        // action: {
+        //   label: "Отменить",
+        //   onClick: () => console.log("Отмена"),
+        // },
       });
       
-      // Navigate to consultation details or confirmation page
-      navigate("/consultation");
+      // Navigate to consultation details page with the new ID
+      if (consultationId) {
+        navigate(`/consultation/${consultationId}`);
+      } else {
+        navigate("/");
+      }
     } catch (error) {
       // Show error message
       toast.error("Ошибка при создании консультации", {
@@ -109,7 +191,7 @@ export function NewConsultationForm() {
     return newDate;
   };
   
-  const timeSlots = ["10:00", "11:00", "13:00", "14:00", "15:00", "16:00"];
+  // We'll use the dynamically generated time slots instead of hardcoded ones
   const topics = [
     { value: "family", label: "Семейное право" },
     { value: "criminal", label: "Уголовное право" },
@@ -127,18 +209,38 @@ export function NewConsultationForm() {
           selected={selectedDate}
           onSelect={setSelectedDate}
           className="rounded-lg border shadow-sm"
+          modifiers={{
+            consultation: getDatesWithConsultations(expertConsultations)
+          }}
+          // modifiersClassNames={{
+          //   consultation: "bg-orange-100 rounded-lg font-bold text-black-700"
+          // }}
         />
         <div className="flex flex-col gap-2 min-w-25">
-          {timeSlots.map((time) => (
-            <Button 
-              key={time}
-              type="button"
-              variant={selectedTime === time ? "default" : "outline"}
-              onClick={() => setSelectedTime(time)}
-            >
-              {time}
-            </Button>
-          ))}
+            {isLoadingExpert ? (
+              <div className="col-span-3 text-center">Загрузка доступных слотов...</div>
+            ) : availableTimeSlots.length > 0 ? (
+              availableTimeSlots.map((slot) => (
+                <Button
+                  key={slot.time}
+                  type="button"
+                  variant={selectedTime === slot.time ? "default" : "outline"}
+                  onClick={() => {
+                    if (slot.available) {
+                      setSelectedTime(slot.time);
+                    } else {
+                      toast.error("Это время уже занято");
+                    }
+                  }}
+                  disabled={!slot.available}
+                  className={slot.available ? "hover:bg-gray-100" : ""}
+                >
+                  {slot.time}
+                </Button>
+              ))
+            ) : (
+              <div className="col-span-3 text-center">Нет доступных слотов на выбранную дату</div>
+            )}
         </div>
       </div>
       

@@ -1,5 +1,5 @@
 import Router from 'koa-router'
-import { createExpert, deleteExpert, getExpertByID, listExperts } from '../controllers/expertController'
+import { createExpert, deleteExpert, getExpertByID, getExpertByTelegramId, listExperts } from '../controllers/expertController'
 
 export const expertRouter = new Router({
   prefix: `/experts`,
@@ -7,6 +7,9 @@ export const expertRouter = new Router({
 
 // GET all experts
 expertRouter.get(`/`, listExperts)
+
+// GET expert by Telegram ID
+expertRouter.get(`/telegram/:telegram_id`, getExpertByTelegramId)
 
 // GET expert by ID
 expertRouter.get(`/:id`, getExpertByID)

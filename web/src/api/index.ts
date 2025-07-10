@@ -1,34 +1,37 @@
 // API Types
 
-// Customer types
-export interface Customer {
+// User types
+export interface User {
   id?: number;
-  name: string;
-  email: string;
-  phone?: string;
-  telegram_id?: string;
+  name?: string;
+  telegramId?: number;
+  telegramLink?: string;
+  role?: string;
+}
+
+// Customer types
+export interface Customer extends User {
 }
 
 // Expert types
-export interface Expert {
-  id?: number;
-  name: string;
-  specialization: string;
-  email: string;
-  phone?: string;
-  telegram_id?: string;
+export interface Expert extends User {
 }
 
+// Consultation status type
+export type ConsultationStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';
+
 // Consultation types
-export interface Consultation {
+export interface IConsultation {
   id?: number;
-  expert_id: number;
-  customer_id: number;
+  expertId: number;
+  customerId: number;
   type: string;
   message?: string;
-  scheduled_for: string | Date; // ISO date string or Date object
-  expert?: Expert;
+  status: ConsultationStatus | string;
+  scheduledFor: Date | string;
   customer?: Customer;
+  expert?: Expert;
+  comment?: string;
 }
 
 // API Response types
@@ -37,12 +40,12 @@ interface ApiResponse<T> {
   [key: string]: any;
 }
 
-interface ConsultationResponse extends ApiResponse<Consultation> {
-  consultation: Consultation;
+interface ConsultationResponse extends ApiResponse<IConsultation> {
+  consultation: IConsultation;
 }
 
-interface ConsultationsResponse extends ApiResponse<Consultation[]> {
-  consultations: Consultation[];
+interface ConsultationsResponse extends ApiResponse<IConsultation[]> {
+  consultations: IConsultation[];
 }
 
 interface CustomerResponse extends ApiResponse<Customer> {
@@ -61,6 +64,14 @@ interface ExpertsResponse extends ApiResponse<Expert[]> {
   experts: Expert[];
 }
 
+interface UserResponse extends ApiResponse<User> {
+  user: User;
+}
+
+interface UsersResponse extends ApiResponse<User[]> {
+  users: User[];
+}
+
 // Error handling
 class ApiError extends Error {
   status: number;
@@ -72,6 +83,12 @@ class ApiError extends Error {
     this.status = status;
     this.data = data;
   }
+}
+
+// User role response type
+interface UserRoleResponse extends ApiResponse<{ role: string }> {
+  role: 'expert' | 'customer' | 'unknown';
+  user?: Expert | Customer;
 }
 
 // Main API class
@@ -128,8 +145,17 @@ export class Api {
     return this.request<ConsultationsResponse>('/consultations');
   }
 
-  async getConsultationById(id: number): Promise<ConsultationResponse> {
-    return this.request<ConsultationResponse>(`/consultations/${id}`);
+  // User methods
+  async getUsers(): Promise<UsersResponse> {
+    return this.request<UsersResponse>('/users');
+  }
+
+  async getUserById(id: number): Promise<UserResponse> {
+    return this.request<UserResponse>(`/users/${id}`);
+  }
+
+  async getUserByTelegramId(telegramId: number | string): Promise<UserResponse> {
+    return this.request<UserResponse>(`/users/byTelegramId/${telegramId}`);
   }
 
   async getConsultationsByCustomer(customerId: number): Promise<ConsultationsResponse> {
@@ -140,68 +166,27 @@ export class Api {
     return this.request<ConsultationsResponse>(`/consultations/expert/${expertId}`);
   }
 
-  async createConsultation(consultation: Consultation): Promise<ConsultationResponse> {
-    // Convert Date object to ISO string if needed
-    const payload = {
-      ...consultation,
-      scheduled_for: consultation.scheduled_for instanceof Date 
-        ? consultation.scheduled_for.toISOString() 
-        : consultation.scheduled_for
-    };
-
+  async getConsultationByUserId(id: number): Promise<ConsultationResponse> {
+    return this.request<ConsultationResponse>(`/consultations/user/${id}`);
+  }
+  
+  async getConsultationById(id: number): Promise<ConsultationResponse> {
+    return this.request<ConsultationResponse>(`/consultations/${id}`);
+  }
+  
+  // Create new consultation
+  async createConsultation(data: Partial<IConsultation>): Promise<ConsultationResponse> {
     return this.request<ConsultationResponse>('/consultations', {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: JSON.stringify(data)
     });
   }
-
-  async deleteConsultation(id: number): Promise<ApiResponse<null>> {
-    return this.request<ApiResponse<null>>(`/consultations/${id}`, {
-      method: 'DELETE',
-    });
-  }
-
-  // Customer methods
-  async getCustomers(): Promise<CustomersResponse> {
-    return this.request<CustomersResponse>('/customers');
-  }
-
-  async getCustomerById(id: number): Promise<CustomerResponse> {
-    return this.request<CustomerResponse>(`/customers/${id}`);
-  }
-
-  async createCustomer(customer: Customer): Promise<CustomerResponse> {
-    return this.request<CustomerResponse>('/customers', {
-      method: 'POST',
-      body: JSON.stringify(customer),
-    });
-  }
-
-  async deleteCustomer(id: number): Promise<ApiResponse<null>> {
-    return this.request<ApiResponse<null>>(`/customers/${id}`, {
-      method: 'DELETE',
-    });
-  }
-
-  // Expert methods
-  async getExperts(): Promise<ExpertsResponse> {
-    return this.request<ExpertsResponse>('/experts');
-  }
-
-  async getExpertById(id: number): Promise<ExpertResponse> {
-    return this.request<ExpertResponse>(`/experts/${id}`);
-  }
-
-  async createExpert(expert: Expert): Promise<ExpertResponse> {
-    return this.request<ExpertResponse>('/experts', {
-      method: 'POST',
-      body: JSON.stringify(expert),
-    });
-  }
-
-  async deleteExpert(id: number): Promise<ApiResponse<null>> {
-    return this.request<ApiResponse<null>>(`/experts/${id}`, {
-      method: 'DELETE',
+  
+  // Update consultation status
+  async updateConsultation(id: number, data: Partial<IConsultation>): Promise<ConsultationResponse> {
+    return this.request<ConsultationResponse>(`/consultations/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
     });
   }
 }

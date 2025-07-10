@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api';
-import type { Consultation, Customer, Expert } from '../api';
+import type { IConsultation, Customer, Expert } from '../api';
 
 // Consultation hooks
 export function useConsultations() {
@@ -38,7 +38,7 @@ export function useCreateConsultation() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (consultation: Consultation) => api.createConsultation(consultation),
+    mutationFn: (consultation: Partial<IConsultation>) => api.createConsultation(consultation),
     onSuccess: () => {
       // Invalidate and refetch consultations queries
       queryClient.invalidateQueries({ queryKey: ['consultations'] });

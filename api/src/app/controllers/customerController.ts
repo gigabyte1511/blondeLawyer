@@ -8,8 +8,8 @@ import { transaction } from 'objection';
 // Define request payload types
 interface CustomerRequestPayload {
   name?: string;
-  telegramid?: number;
-  telegramlink?: string;
+  telegramId?: number;
+  telegramLink?: string;
 }
 
 interface CustomerByIDRequestPayload {
@@ -19,8 +19,8 @@ interface CustomerByIDRequestPayload {
 // Validation schema
 const customerSchema = yup.object({
   name: yup.string().nullable(),
-  telegramid: yup.number().nullable(),
-  telegramlink: yup.string().nullable(),
+  telegramId: yup.number().nullable(),
+  telegramLink: yup.string().nullable(),
 });
 
 export async function listCustomers(appContext: ParameterizedContext<
@@ -30,11 +30,11 @@ export async function listCustomers(appContext: ParameterizedContext<
   try {
     const customers = await Customer.query();
 
-    if (!customers.length) {
-      appContext.status = 404;
-      appContext.body = { error: "No customers found." };
-      return;
-    }
+    // if (!customers.length) {
+    //   appContext.status = 404;
+    //   appContext.body = { error: "No customers found." };
+    //   return;
+    // }
 
     appContext.body = {
       message: "Customers retrieved successfully.",
@@ -91,6 +91,44 @@ export async function getCustomerByID(appContext: ParameterizedContext<
   }
 }
 
+export async function getCustomerByTelegramId(appContext: ParameterizedContext<
+  Koa.DefaultState,
+  Router.IRouterParamContext<Koa.DefaultState, object>
+>) {
+  const telegramId = appContext.params.telegram_id;
+
+  if (!telegramId) {
+    appContext.status = 400;
+    appContext.body = { error: 'Telegram ID is required' };
+    return;
+  }
+
+  try {
+    const customer = await Customer.query().where('telegramId', telegramId).first();
+
+    if (!customer) {
+      appContext.status = 404;
+      appContext.body = { error: `Customer with Telegram ID "${telegramId}" not found.` };
+      return;
+    }
+
+    appContext.body = {
+      message: `Customer with Telegram ID "${telegramId}" retrieved successfully.`,
+      customer
+    };
+  } catch (error) {
+    let errorMessage = 'An unexpected error occurred.';
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    appContext.status = 500;
+    appContext.body = {
+      error: errorMessage
+    };
+  }
+}
+
 export async function createCustomer(appContext: ParameterizedContext<
   Koa.DefaultState,
   Router.IRouterParamContext<Koa.DefaultState, object>
@@ -107,8 +145,9 @@ export async function createCustomer(appContext: ParameterizedContext<
     // Create new customer
     const customer = await Customer.query(trx).insert({
       name: body.name,
-      telegram_id: body.telegramid,
-      telegram_link: body.telegramlink
+      telegramId: body.telegramId, // Using camelCase property names
+      telegramLink: body.telegramLink, // Using camelCase property names
+      role: 'customer'
     });
     
     await trx.commit();

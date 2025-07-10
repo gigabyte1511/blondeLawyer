@@ -2,15 +2,23 @@ import { Model } from 'objection';
 import Expert from './Expert';
 import Customer from './Customer';
 
+export enum ConsultationStatus {
+  PENDING = 'pending',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled'
+}
+
 export default class Consultation extends Model {
   id!: number;
-  expert_id!: number;
-  customer_id!: number;
+  expertId!: number; // Maps to expert_id in DB
+  customerId!: number; // Maps to customer_id in DB
   type!: string;
   message?: string;
-  scheduled_for!: Date;
-  created_at!: Date;
-  updated_at!: Date;
+  status!: ConsultationStatus;
+  scheduledFor!: string; // Maps to scheduled_for in DB, ISO date string
+  createdAt!: Date; // Maps to created_at in DB
+  updatedAt!: Date; // Maps to updated_at in DB
 
   // Relationships
   expert?: Expert;
@@ -27,38 +35,45 @@ export default class Consultation extends Model {
   static get jsonSchema() {
     return {
       type: 'object',
-      required: ['expert_id', 'customer_id', 'type', 'scheduled_for'],
+      required: ['expertId', 'customerId', 'type', 'scheduledFor'],
       properties: {
         id: { type: 'integer' },
-        expert_id: { type: 'integer' },
-        customer_id: { type: 'integer' },
+        expertId: { type: 'integer' },
+        customerId: { type: 'integer' },
         type: { type: 'string' },
+        status: { type: 'string' },
         message: { type: ['string', 'null'] },
-        scheduled_for: { type: 'string', format: 'date-time' },
-        created_at: { type: 'string', format: 'date-time' },
-        updated_at: { type: 'string', format: 'date-time' }
+        scheduledFor: { type: 'string', format: 'date-time' }, // ISO date string
+        createdAt: { type: 'string', format: 'date-time' },
+        updatedAt: { type: 'string', format: 'date-time' }
       }
     };
   }
 
   static get relationMappings() {
+    // Use path for imports to avoid issues
+    const path = require('path');
+    
     return {
       expert: {
         relation: Model.BelongsToOneRelation,
-        modelClass: Expert,
+        modelClass: path.join(__dirname, 'Expert'),
         join: {
-          from: 'consultations.expert_id',
-          to: 'experts.id'
+          from: 'consultations.expert_id', // DB column name is snake_case
+          to: 'users.id'
         }
       },
       customer: {
         relation: Model.BelongsToOneRelation,
-        modelClass: Customer,
+        modelClass: path.join(__dirname, 'Customer'),
         join: {
-          from: 'consultations.customer_id',
-          to: 'customers.id'
+          from: 'consultations.customer_id', // DB column name is snake_case
+          to: 'users.id'
         }
       }
     };
   }
+
+  // We're now using knexSnakeCaseMappers() for automatic snake_case to camelCase conversion
+  // No need for custom $formatJson method anymore
 }

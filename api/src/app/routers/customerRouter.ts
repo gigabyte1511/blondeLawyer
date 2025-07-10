@@ -1,5 +1,5 @@
 import Router from 'koa-router'
-import { createCustomer, deleteCustomer, getCustomerByID, listCustomers } from '../controllers/customerController'
+import { createCustomer, deleteCustomer, getCustomerByID, getCustomerByTelegramId, listCustomers } from '../controllers/customerController'
 
 export const customerRouter = new Router({
   prefix: `/customers`,
@@ -7,6 +7,9 @@ export const customerRouter = new Router({
 
 // GET all customers
 customerRouter.get(`/`, listCustomers)
+
+// GET customer by Telegram ID
+customerRouter.get(`/telegram/:telegram_id`, getCustomerByTelegramId)
 
 // GET customer by ID
 customerRouter.get(`/:id`, getCustomerByID)

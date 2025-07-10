@@ -8,12 +8,12 @@ exports.up = function (knex) {
         table
             .bigInteger("expert_id")
             .references("id")
-            .inTable("experts")
+            .inTable("users")
             .onDelete("CASCADE")
         table
             .bigInteger("customer_id")
             .references("id")
-            .inTable("customers")
+            .inTable("users")
             .onDelete("CASCADE")
         table.text("type").notNullable();
         table.text("status").notNullable();

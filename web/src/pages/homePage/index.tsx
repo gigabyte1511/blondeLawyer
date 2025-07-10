@@ -5,20 +5,35 @@ import { ExpertHomePage } from "./expert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CustomerHomePage } from "./customer";
 import { useTelegram } from "@/hooks/useTelegram";
-import { useEffect } from "react";
+// import { useUser } from "@/providers/UserProvider";
+import { useQuery } from "@tanstack/react-query";
+import api from "@/api";
 
 // Home page component
 export function HomePage() {
   const navigate = useNavigate();
-  const { user, userId, username, firstName, lastName } = useTelegram();
-  const test = "expert";
+  const { telegramUser, webApp } = useTelegram();
   
-  useEffect(() => {
-    if (user) {
-      console.log('Telegram User ID:', userId);
-      console.log('Telegram User:', user);
-    }
-  }, [user, userId]);
+  // Use Tanstack Query to fetch user by Telegram ID
+  const { data: userData, isLoading, error } = useQuery({
+    queryKey: ['user', telegramUser?.id],
+    queryFn: async () => {
+      if (!telegramUser?.id) return null;
+      try {
+        const response = await api.getUserByTelegramId(telegramUser.id);
+        return response.user;
+      } catch (err) {
+        console.error('Error fetching user:', err);
+        throw err;
+      }
+    },
+    enabled: !!telegramUser?.id, // Only run query when telegramUser.id exists
+  });
+  
+  // Determine user role from fetched data
+  const role = userData?.role || 'unknown';
+  const isExpert = role === 'expert';
+  
   return (
     <div>
       <div className="flex items-center justify-between">
@@ -33,12 +48,20 @@ export function HomePage() {
       {/* Display Telegram user information */}
       <div className="mt-4 p-4 bg-slate-100 rounded-md">
         <h2 className="text-lg font-semibold mb-2">Telegram User Info:</h2>
-        <p><strong>User ID:</strong> {userId || 'Not available'}</p>
-        <p><strong>Username:</strong> {username || 'Not available'}</p>
-        <p><strong>Name:</strong> {firstName} {lastName}</p>
+        <p><strong>User Telegram ID:</strong> {telegramUser?.id || 'Not available'}</p>
+        <p><strong>Username:</strong> {telegramUser?.username || 'Not available'}</p>
+        <p><strong>Name:</strong> {telegramUser?.first_name} {telegramUser?.last_name}</p>
+        <p><strong>Role:</strong> {isLoading ? 'Loading...' : role}</p>
+        {error && <p className="text-red-500">Error loading user data</p>}
+        {userData && (
+          <div className="mt-2">
+            <p><strong>User ID:</strong> {userData.id}</p>
+            <p><strong>Name:</strong> {userData.name}</p>
+          </div>
+        )}
       </div>
       
-      {test === "expert" ? <ExpertHomePage /> : <CustomerHomePage />}
+      {isExpert ? <ExpertHomePage userData={userData} /> : <CustomerHomePage userData={userData} />}
     </div>
   )
 }

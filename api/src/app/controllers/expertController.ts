@@ -8,8 +8,8 @@ import { transaction } from 'objection';
 // Define request payload types
 interface ExpertRequestPayload {
   name?: string;
-  telegramid?: number;
-  telegramlink?: string;
+  telegramId?: number;
+  telegramLink?: string;
 }
 
 interface ExpertByIDRequestPayload {
@@ -19,8 +19,8 @@ interface ExpertByIDRequestPayload {
 // Validation schema
 const expertSchema = yup.object({
   name: yup.string().nullable(),
-  telegramid: yup.number().nullable(),
-  telegramlink: yup.string().nullable(),
+  telegramId: yup.number().nullable(),
+  telegramLink: yup.string().nullable(),
 });
 
 export async function listExperts(appContext: ParameterizedContext<
@@ -30,11 +30,11 @@ export async function listExperts(appContext: ParameterizedContext<
   try {
     const experts = await Expert.query();
 
-    if (!experts.length) {
-      appContext.status = 404;
-      appContext.body = { error: "No experts found." };
-      return;
-    }
+    // if (!experts.length) {
+    //   appContext.status = 404;
+    //   appContext.body = { error: "No experts found." };
+    //   return;
+    // }
 
     appContext.body = {
       message: "Experts retrieved successfully.",
@@ -91,6 +91,45 @@ export async function getExpertByID(appContext: ParameterizedContext<
   }
 }
 
+export async function getExpertByTelegramId(appContext: ParameterizedContext<
+  Koa.DefaultState,
+  Router.IRouterParamContext<Koa.DefaultState, object>
+>) {
+  const telegramId = appContext.params.telegram_id;
+
+  if (!telegramId) {
+    appContext.status = 400;
+    appContext.body = { error: 'Telegram ID is required' };
+    return;
+  }
+
+  try {
+    const expert = await Expert.query().where('telegramId', telegramId).first();
+
+    if (!expert) {
+      appContext.status = 404;
+      appContext.body = { error: `Expert with Telegram ID "${telegramId}" not found.` };
+      return;
+    }
+
+    appContext.body = {
+      message: `Expert with Telegram ID "${telegramId}" retrieved successfully.`,
+      expert
+    };
+  } catch (error) {
+    let errorMessage = 'An unexpected error occurred.';
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    appContext.status = 500;
+    appContext.body = {
+      error: errorMessage
+    };
+  }
+}
+
+
 export async function createExpert(appContext: ParameterizedContext<
   Koa.DefaultState,
   Router.IRouterParamContext<Koa.DefaultState, object>
@@ -107,8 +146,9 @@ export async function createExpert(appContext: ParameterizedContext<
     // Create new expert
     const expert = await Expert.query(trx).insert({
       name: body.name,
-      telegram_id: body.telegramid,
-      telegram_link: body.telegramlink
+      telegramId: body.telegramId, // Using camelCase property names
+      telegramLink: body.telegramLink, // Using camelCase property names
+      role: 'expert'
     });
     
     await trx.commit();
