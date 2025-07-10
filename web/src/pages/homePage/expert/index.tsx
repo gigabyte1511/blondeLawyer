@@ -122,7 +122,7 @@ export function ExpertHomePage({ userData }: ExpertHomePageProps) {
               todayConsultations
                 .sort((a, b) => new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime())
                 .map(consultation => 
-                  <Consultation consultation={consultation} key={consultation.id} />
+                  <Consultation consultation={consultation} user={userData} key={consultation.id} />
                 )
             ) : (
                 <CardDescription>На сегодня консультаций нет</CardDescription>
@@ -153,7 +153,7 @@ export function ExpertHomePage({ userData }: ExpertHomePageProps) {
               otherDaysConsultations
                 .sort((a, b) => new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime())
                 .map(consultation => 
-                  <Consultation consultation={consultation} key={consultation.id} />
+                  <Consultation consultation={consultation} user={userData} key={consultation.id} />
                 )
             ) : (
                 <CardDescription>На другие дни консультаций нет</CardDescription>

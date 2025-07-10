@@ -46,94 +46,94 @@ export function useCreateConsultation() {
   });
 }
 
-export function useDeleteConsultation() {
-  const queryClient = useQueryClient();
+// export function useDeleteConsultation() {
+//   const queryClient = useQueryClient();
   
-  return useMutation({
-    mutationFn: (id: number) => api.deleteConsultation(id),
-    onSuccess: () => {
-      // Invalidate and refetch consultations queries
-      queryClient.invalidateQueries({ queryKey: ['consultations'] });
-    },
-  });
-}
+//   return useMutation({
+//     mutationFn: (id: number) => api.deleteConsultation(id),
+//     onSuccess: () => {
+//       // Invalidate and refetch consultations queries
+//       queryClient.invalidateQueries({ queryKey: ['consultations'] });
+//     },
+//   });
+// }
 
 // Customer hooks
-export function useCustomers() {
-  return useQuery({
-    queryKey: ['customers'],
-    queryFn: () => api.getCustomers(),
-  });
-}
+// export function useCustomers() {
+//   return useQuery({
+//     queryKey: ['customers'],
+//     queryFn: () => api.getCustomers(),
+//   });
+// }
 
-export function useCustomer(id: number) {
-  return useQuery({
-    queryKey: ['customer', id],
-    queryFn: () => api.getCustomerById(id),
-    enabled: !!id,
-  });
-}
+// export function useCustomer(id: number) {
+//   return useQuery({
+//     queryKey: ['customer', id],
+//     queryFn: () => api.getCustomerById(id),
+//     enabled: !!id,
+//   });
+// }
 
-export function useCreateCustomer() {
-  const queryClient = useQueryClient();
+// export function useCreateCustomer() {
+//   const queryClient = useQueryClient();
   
-  return useMutation({
-    mutationFn: (customer: Customer) => api.createCustomer(customer),
-    onSuccess: () => {
-      // Invalidate and refetch customers queries
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
-    },
-  });
-}
+//   return useMutation({
+//     mutationFn: (customer: Customer) => api.createCustomer(customer),
+//     onSuccess: () => {
+//       // Invalidate and refetch customers queries
+//       queryClient.invalidateQueries({ queryKey: ['customers'] });
+//     },
+//   });
+// }
 
-export function useDeleteCustomer() {
-  const queryClient = useQueryClient();
+// export function useDeleteCustomer() {
+//   const queryClient = useQueryClient();
   
-  return useMutation({
-    mutationFn: (id: number) => api.deleteCustomer(id),
-    onSuccess: () => {
-      // Invalidate and refetch customers queries
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
-    },
-  });
-}
+//   return useMutation({
+//     mutationFn: (id: number) => api.deleteCustomer(id),
+//     onSuccess: () => {
+//       // Invalidate and refetch customers queries
+//       queryClient.invalidateQueries({ queryKey: ['customers'] });
+//     },
+//   });
+// }
 
 // Expert hooks
-export function useExperts() {
-  return useQuery({
-    queryKey: ['experts'],
-    queryFn: () => api.getExperts(),
-  });
-}
+// export function useExperts() {
+//   return useQuery({
+//     queryKey: ['experts'],
+//     queryFn: () => api.getExperts(),
+//   });
+// }
 
-export function useExpert(id: number) {
-  return useQuery({
-    queryKey: ['expert', id],
-    queryFn: () => api.getExpertById(id),
-    enabled: !!id,
-  });
-}
+// export function useExpert(id: number) {
+//   return useQuery({
+//     queryKey: ['expert', id],
+//     queryFn: () => api.getExpertById(id),
+//     enabled: !!id,
+//   });
+// }
 
-export function useCreateExpert() {
-  const queryClient = useQueryClient();
+// export function useCreateExpert() {
+//   const queryClient = useQueryClient();
   
-  return useMutation({
-    mutationFn: (expert: Expert) => api.createExpert(expert),
-    onSuccess: () => {
-      // Invalidate and refetch experts queries
-      queryClient.invalidateQueries({ queryKey: ['experts'] });
-    },
-  });
-}
+//   return useMutation({
+//     mutationFn: (expert: Expert) => api.createExpert(expert),
+//     onSuccess: () => {
+//       // Invalidate and refetch experts queries
+//       queryClient.invalidateQueries({ queryKey: ['experts'] });
+//     },
+//   });
+// }
 
-export function useDeleteExpert() {
-  const queryClient = useQueryClient();
+// export function useDeleteExpert() {
+//   const queryClient = useQueryClient();
   
-  return useMutation({
-    mutationFn: (id: number) => api.deleteExpert(id),
-    onSuccess: () => {
-      // Invalidate and refetch experts queries
-      queryClient.invalidateQueries({ queryKey: ['experts'] });
-    },
-  });
-}
+//   return useMutation({
+//     mutationFn: (id: number) => api.deleteExpert(id),
+//     onSuccess: () => {
+//       // Invalidate and refetch experts queries
+//       queryClient.invalidateQueries({ queryKey: ['experts'] });
+//     },
+//   });
+// }

@@ -4,8 +4,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox"
 import {
     Select,
@@ -22,7 +20,6 @@ import { Textarea } from "@/components/ui/textarea";
 
 // Import API hooks
 import { useCreateConsultation } from "@/hooks/useApi";
-import { useExperts } from "@/hooks/useApi";
 import api, { type IConsultation } from "@/api";
 import { generateTimeSlots, getDatesWithConsultations } from "@/utils/consultations";
 import { toast } from "sonner";
@@ -115,9 +112,6 @@ export function NewConsultationForm() {
   
   // Use the mutation hook for creating consultations
   const createConsultation = useCreateConsultation();
-  
-  // Fetch experts (in a real app, we would use this to select an expert)
-  const { data: expertsData } = useExperts();
   
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

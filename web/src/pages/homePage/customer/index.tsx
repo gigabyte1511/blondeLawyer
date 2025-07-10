@@ -13,7 +13,7 @@ import config from "../../../../config/default.json";
 import { generateTimeSlots, getDatesWithConsultations } from "@/utils/consultations";
 
 interface CustomerHomePageProps {
-    userData: User;
+    userData?: any; // Optional prop, using any for now, but ideally should be a proper User type
 }
 
 interface TimeSlot {
