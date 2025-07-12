@@ -33,6 +33,7 @@ export function HomePage() {
   // Determine user role from fetched data
   const role = userData?.role || 'unknown';
   const isExpert = role === 'expert';
+  const isAdmin = role === 'admin';
   
   return (
     <div>
@@ -40,8 +41,22 @@ export function HomePage() {
         <div><img src={daLogo} alt="Logo" className="h-10" /></div>
         <h1 className="text-2xl font-bold">Мои записи</h1>
         <Avatar>
-          <AvatarImage src="https://github.com/shadcn.png" />
-          <AvatarFallback>SH</AvatarFallback>
+          {isAdmin ? (
+            <>
+              <AvatarImage src="/admin-icon.png" />
+              <AvatarFallback>A</AvatarFallback>
+            </>
+          ) : isExpert ? (
+            <>
+              <AvatarImage src="/expert-icon.png" />
+              <AvatarFallback>E</AvatarFallback>
+            </>
+          ) : (
+            <>
+              <AvatarImage src="/customer-icon.png" />
+              <AvatarFallback>C</AvatarFallback>
+            </>
+          )}
         </Avatar>
       </div>
       
