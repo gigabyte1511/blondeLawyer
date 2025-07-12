@@ -23,7 +23,6 @@ import { useCreateConsultation } from "@/hooks/useApi";
 import api, { type IConsultation } from "@/api";
 import { generateTimeSlots, getDatesWithConsultations } from "@/utils/consultations";
 import { toast } from "sonner";
-import config from "../../../config/default.json";
 import { useTelegram } from "@/hooks/useTelegram";
 
 // Interface for location state with pre-selected values
@@ -49,10 +48,31 @@ export function NewConsultationForm() {
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [comment, setComment] = useState<string>("");
   const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
-  const [expertId, setExpertId] = useState<number | undefined>(state?.expertId || config.mainExpertId);
+  const [expertId, setExpertId] = useState<number | undefined>(state?.expertId);
   const [availableTimeSlots, setAvailableTimeSlots] = useState<TimeSlot[]>([]);
 
   const { telegramUser, webApp } = useTelegram();
+  
+  // Get the first expert from the database
+  const { data: expertsData, isLoading: isLoadingExperts } = useQuery({
+    queryKey: ['experts'],
+    queryFn: async () => {
+      try {
+        const response = await api.getExperts();
+        return response;
+      } catch (err) {
+        console.error('Error fetching experts:', err);
+        throw err;
+      }
+    },
+  });
+  
+  // Use the first expert as the main expert if no expertId is provided in state
+  useEffect(() => {
+    if (!expertId && expertsData && expertsData.experts && expertsData.experts.length > 0) {
+      setExpertId(expertsData.experts[0].id);
+    }
+  }, [expertsData, expertId]);
   
   // Use Tanstack Query to fetch user by Telegram ID
   const { data: userData, isLoading, error } = useQuery({
@@ -75,7 +95,9 @@ export function NewConsultationForm() {
     queryKey: ['consultations', 'expert', expertId],
     queryFn: async () => {
       try {
-        const response = await api.getConsultationsByExpert(expertId || config.mainExpertId);
+        // Only fetch if we have an expertId
+        if (!expertId) return { consultations: [] };
+        const response = await api.getConsultationsByExpert(expertId);
         return response;
       } catch (err) {
         console.error('Error fetching expert consultations:', err);
@@ -89,8 +111,10 @@ export function NewConsultationForm() {
   
   // Update available time slots when date or expert consultations change
   useEffect(() => {
-    if (selectedDate && expertConsultations) {
-      const slots = generateTimeSlots(selectedDate, expertConsultations);
+    if (selectedDate) {
+      // If expertConsultations is undefined, pass an empty array to ensure slots are generated
+      const consultationsToUse = expertConsultations || [];
+      const slots = generateTimeSlots(selectedDate, consultationsToUse);
       setAvailableTimeSlots(slots);
       
       // If a time was pre-selected but is not available, clear it
@@ -187,11 +211,14 @@ export function NewConsultationForm() {
   
   // We'll use the dynamically generated time slots instead of hardcoded ones
   const topics = [
-    { value: "family", label: "Семейное право" },
-    { value: "criminal", label: "Уголовное право" },
-    { value: "civil", label: "Гражданское право" },
-    { value: "business", label: "Бизнес право" },
-    { value: "other", label: "Другое" }
+    { value: "Семейное право", label: "Семейное право" },
+    { value: "Бизнес право", label: "Бизнес право" },
+    { value: "Юрист-судебник", label: "Юрист-судебник" },
+    { value: "Я убил(а) человека", label: "Я убил(а) человека" },
+    { value: "Почему тучка плачет", label: "Почему тучка плачет" },
+    { value: "Сходить на свидание", label: "Сходить на свидание" },
+    { value: "Посидеть в машине до 4 утра", label: "Посидеть в машине до 4 утра" },
+    { value: "Другое", label: "Другое" }
   ];
   
   return (

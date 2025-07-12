@@ -45,7 +45,7 @@ const createMockTelegramWebApp = (): TelegramWebApp => {
     initDataUnsafe: {
       query_id: 'mock_query_id',
       user: {
-        id: 104, // Mock Telegram user ID 100
+        id: 554386866, // Mock Telegram user ID 100
         first_name: 'Test',
         last_name: 'User',
         username: 'testuser',

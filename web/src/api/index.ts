@@ -150,6 +150,11 @@ export class Api {
     return this.request<UsersResponse>('/users');
   }
 
+  // User methods
+  async getExperts(): Promise<UsersResponse> {
+    return this.request<UsersResponse>('/experts');
+  }
+
   async getUserById(id: number): Promise<UserResponse> {
     return this.request<UserResponse>(`/users/${id}`);
   }

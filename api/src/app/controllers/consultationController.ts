@@ -5,7 +5,9 @@ import * as yup from 'yup';
 import Consultation, { ConsultationStatus } from '../models/Consultation';
 import Expert from '../models/Expert';
 import Customer from '../models/Customer';
+import User from '../models/User';
 import { transaction } from 'objection';
+import TelegramBotService from '../services/telegramBot';
 
 // Define request payload types
 
@@ -185,6 +187,48 @@ export async function createConsultation(appContext: ParameterizedContext<
     const completeConsultation = await Consultation.query()
       .findById(consultation.id)
       .withGraphFetched('[expert, customer]');
+    console.log("completeConsultation",completeConsultation)
+    // Send notifications to both expert and customer
+    try {
+      console.log("completeConsultation",completeConsultation)
+      const botService = TelegramBotService.getInstance();
+      
+        if (expert.telegramId) {
+          // Format date for display
+          const scheduledDate = new Date(body.scheduledFor);
+          const formattedDate = scheduledDate.toLocaleString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+          
+          // Notify expert about new consultation
+          await botService.sendNotification(
+            expert.telegramId, // telegramId is now a string
+            `🆕 У вас новая запись с номером #${consultation.id}!\n\n` +
+            `🆕 Новая консультация #${consultation.id} создана!\n\n` +
+            `📅 Дата и время: ${formattedDate}\n` +
+            `👤 Клиент: ${expert.name || 'Неизвестно'}\n\n` +
+            `Пожалуйста, подтвердите или отклоните запрос.`
+          );
+        }
+      
+      // Get customer's Telegram ID
+        if (customer.telegramId) {
+          // Notify customer about consultation creation
+          await botService.sendNotification(
+            customer.telegramId, // telegramId is now a string
+            `✅ Ваша заявка на консультацию #${consultation.id} успешно создана!\n\n` +
+            `Статус: ожидает подтверждения\n\n` +
+            `Мы уведомим вас, когда юрист подтвердит консультацию.`
+          );
+        }     
+      } catch (error) {
+        // Log notification error but don't fail the request
+        console.error('Error sending consultation creation notifications:', error);
+      }
     
     appContext.status = 201;
     appContext.body = {
@@ -216,15 +260,35 @@ export async function updateConsultation(appContext: ParameterizedContext<
     return;
   }
   
-  console.log(appContext.request.body);
+  console.log("updateConsultation", appContext.request.body);
   const body = appContext.request.body as Partial<ConsultationRequestPayload>;
   
+  
   try {
+    
     // First check if the consultation exists
     const existingConsultation = await Consultation.query().findById(id);
+
+    
+
+    console.log("existingConsultation", existingConsultation)
     if (!existingConsultation) {
       appContext.status = 404;
       appContext.body = { error: `Consultation with ID "${id}" not found.` };
+      return;
+    }
+    
+    const expert = await Expert.query().findById(existingConsultation.expertId);
+    if (!expert) {
+      appContext.status = 404;
+      appContext.body = { error: `Expert with ID "${existingConsultation.expertId}" not found.` };
+      return;
+    }
+    
+    const customer = await Customer.query().findById(existingConsultation.customerId);
+    if (!customer) {
+      appContext.status = 404;
+      appContext.body = { error: `Customer with ID "${existingConsultation.customerId}" not found.` };
       return;
     }
     
@@ -262,11 +326,11 @@ export async function updateConsultation(appContext: ParameterizedContext<
     // Start a transaction
     let trx;
     trx = await transaction.start(Consultation.knex());
-    
+    const {comment, ...rest} = updateData;
     // Update the consultation
     await Consultation.query(trx)
       .findById(id)
-      .patch(updateData);
+      .patch(rest);
     
     await trx.commit();
     
@@ -275,6 +339,71 @@ export async function updateConsultation(appContext: ParameterizedContext<
       .findById(id)
       .withGraphFetched('[expert, customer]');
     
+      try {
+        const botService = TelegramBotService.getInstance();
+        
+        if (updatedConsultation && updatedConsultation.scheduledFor) {
+          // Format date for display
+          const scheduledDate = new Date(updatedConsultation.scheduledFor);
+          const formattedDate = scheduledDate.toLocaleString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+          
+          // Notify expert about consultation status update
+          if (expert.telegramId && updatedConsultation.id) {
+            let expertMessage = `📝 Обновление консультации #${updatedConsultation.id}\n\n`;
+            expertMessage += `📅 Дата и время: ${formattedDate}\n`;
+            expertMessage += `👤 Клиент: ${customer.name || 'Неизвестно'}\n`;
+            expertMessage += `🔄 Статус: ${updatedConsultation.status || 'не указан'}\n\n`;
+            
+            // Check the status from the request body
+            if (body.status && body.status === 'approved') {
+              expertMessage += `Вы подтвердили эту консультацию. Клиент уведомлен.`;
+            } else if (body.status && body.status === 'cancelled') {
+              expertMessage += `Вы отклонили эту консультацию. Клиент уведомлен.`;
+            } else if (body.status && body.status === 'completed') {
+              expertMessage += `Вы отметили эту консультацию как завершенную. Клиент уведомлен.`;
+            } else {
+              expertMessage += `Статус консультации был обновлен.`;
+            }
+            
+            await botService.sendNotification(expert.telegramId, expertMessage);
+          }
+          
+          // Notify customer about consultation status update
+          if (customer.telegramId && updatedConsultation.id) {
+            let customerMessage = `📝 Обновление консультации #${updatedConsultation.id}\n\n`;
+            customerMessage += `📅 Дата и время: ${formattedDate}\n`;
+            customerMessage += `👩‍⚖️ Юрист: ${expert.name || 'Неизвестно'}\n`;
+            
+            // Check the status from the request body
+            if (body.status && body.status === 'approved') {
+              customerMessage += `✅ Юрист подтвердил вашу консультацию!\n\n`;
+              customerMessage += `Пожалуйста, будьте готовы к консультации в указанное время.`;
+            } else if (body.status && body.status === 'cancelled') {
+              customerMessage += `❌ К сожалению, юрист не может провести консультацию в указанное время.\n\n`;
+              customerMessage += `Причина: ${body.comment || 'Не указано'}.\n\n`;
+              customerMessage += `Пожалуйста, выберите другое время или свяжитесь с нами для получения помощи.`;
+            } else if (body.status && body.status === 'completed') {
+              customerMessage += `🎉 Ваша консультация успешно завершена!\n\n`;
+              customerMessage += `Спасибо за использование нашего сервиса. Если у вас остались вопросы, вы можете записаться на новую консультацию.`;
+            } else {
+              customerMessage += `🔄 Статус вашей консультации изменен на: ${updatedConsultation.status || 'обновлен'}`;
+            }
+            
+            await botService.sendNotification(customer.telegramId, customerMessage);
+          }
+        }     
+      } catch (error) {
+        // Log notification error but don't fail the request
+        console.error('Error sending consultation status update notifications:', error);
+        }
+
+
     appContext.body = {
       message: `Consultation with ID "${id}" updated successfully.`,
       consultation: updatedConsultation
@@ -483,12 +612,8 @@ export async function getConsultationsByExpert(appContext: ParameterizedContext<
     let consultations = await Consultation.query()
       .where('expertId', expert_id) // Using camelCase property names
       .withGraphFetched('[expert, customer]');
-
-    console.log("consultations (before formatting)", consultations);
     
-    // Log the JSON representation to see how $formatJson transforms it
-    console.log("consultations (JSON format)", JSON.stringify(consultations, null, 2));
-    
+    // Log the JSON representation to see how $formatJson transforms it    
     // If relations are null, manually fetch and attach them
     if (consultations.length > 0) {
       // Map over consultations to attach relations
@@ -505,8 +630,6 @@ export async function getConsultationsByExpert(appContext: ParameterizedContext<
         
         return consultation;
       }));
-      
-      console.log("consultations (after manual relation loading)", JSON.stringify(consultations, null, 2));
     }
 
     if (!consultations.length) {

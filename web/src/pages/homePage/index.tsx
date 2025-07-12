@@ -45,7 +45,7 @@ export function HomePage() {
         </Avatar>
       </div>
       
-      {/* Display Telegram user information */}
+      {/* Display Telegram user information
       <div className="mt-4 p-4 bg-slate-100 rounded-md">
         <h2 className="text-lg font-semibold mb-2">Telegram User Info:</h2>
         <p><strong>User Telegram ID:</strong> {telegramUser?.id || 'Not available'}</p>
@@ -59,7 +59,7 @@ export function HomePage() {
             <p><strong>Name:</strong> {userData.name}</p>
           </div>
         )}
-      </div>
+      </div> */}
       
       {isExpert ? <ExpertHomePage userData={userData} /> : <CustomerHomePage userData={userData} />}
     </div>

@@ -3,10 +3,12 @@ import bodyParser from 'koa-bodyparser'
 import cors from '@koa/cors'
 import { Model, knexSnakeCaseMappers } from "objection";
 import knex from "knex";
+import TelegramBotService from './services/telegramBot';
 
 import { expertRouter } from './routers/expertRouter'
 import { customerRouter } from './routers/customerRouter';
 import { consultationRouter } from './routers/consultationRouter';
+import { consultationStatusRouter } from './routers/consultationStatusRouter';
 import { userRouter } from './routers/userRouter';
 
 const knexConfig = require("../../knexfile");
@@ -35,6 +37,15 @@ app.use(bodyParser())
 app.use(customerRouter.routes())
 app.use(expertRouter.routes())
 app.use(consultationRouter.routes())
+app.use(consultationStatusRouter.routes())
 app.use(userRouter.routes())
+
+// Initialize Telegram bot
+try {
+  const botService = TelegramBotService.getInstance();
+  console.log('Telegram bot initialized successfully');
+} catch (error) {
+  console.error('Failed to initialize Telegram bot:', error);
+}
 
 app.listen(3000, () => {console.log(`>> listening on port ${3000}`)})

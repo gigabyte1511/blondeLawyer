@@ -8,9 +8,9 @@ import Customer from '../models/Customer';
 import { transaction } from 'objection';
 
 // Define request payload types
-interface UserRequestPayload {
+export interface UserRequestPayload {
   name?: string;
-  telegramId?: number;
+  telegramId?: string;
   telegramLink?: string;
   role?: string;
 }
@@ -18,7 +18,7 @@ interface UserRequestPayload {
 // Validation schema
 const userSchema = yup.object({
   name: yup.string().nullable(),
-  telegramId: yup.number().nullable(),
+  telegramId: yup.string().nullable(),
   telegramLink: yup.string().nullable(),
   role: yup.string().oneOf(['expert', 'customer']).nullable()
 });

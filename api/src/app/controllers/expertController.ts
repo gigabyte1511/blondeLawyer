@@ -29,6 +29,7 @@ export async function listExperts(appContext: ParameterizedContext<
 >) {
   try {
     const experts = await Expert.query();
+    console.log("experts", experts);
 
     // if (!experts.length) {
     //   appContext.status = 404;

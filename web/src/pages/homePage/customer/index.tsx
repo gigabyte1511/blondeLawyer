@@ -8,8 +8,6 @@ import api, { type User, type IConsultation } from "@/api";
 import { Consultation } from "@/components/consultation";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-// Import config to get main expert ID
-import config from "../../../../config/default.json";
 import { generateTimeSlots, getDatesWithConsultations } from "@/utils/consultations";
 
 interface CustomerHomePageProps {
@@ -28,9 +26,24 @@ export function CustomerHomePage({ userData }: CustomerHomePageProps) {
   // State for available time slots
   const [availableTimeSlots, setAvailableTimeSlots] = useState<TimeSlot[]>([]);
   
-  // Get main expert ID from config
-  const mainExpertId = config.mainExpertId;
+  // Get the first expert from the database
+  const { data: expertsData, isLoading: isLoadingExperts } = useQuery({
+    queryKey: ['experts'],
+    queryFn: async () => {
+      try {
+        const response = await api.getExperts();
+        return response;
+      } catch (err) {
+        console.error('Error fetching experts:', err);
+        throw err;
+      }
+    },
+  });
   
+  // Use the first expert as the main expert
+  const mainExpertId = expertsData?.experts?.[0]?.id;
+  console.log("mainExpertId", mainExpertId)
+
   const { data: customerConsultations, isLoading: isLoadingCustomer } = useQuery({
     queryKey: ['consultations', 'customer', userData?.id],
     queryFn: async () => {
@@ -52,6 +65,7 @@ export function CustomerHomePage({ userData }: CustomerHomePageProps) {
   const { data: expertConsultations, isLoading: isLoadingExpert } = useQuery({
     queryKey: ['consultations', 'expert', mainExpertId],
     queryFn: async () => {
+      if (!mainExpertId) return { consultations: [] };
       try {
         const response = await api.getConsultationsByExpert(mainExpertId);
         return response;
@@ -60,6 +74,7 @@ export function CustomerHomePage({ userData }: CustomerHomePageProps) {
         throw err;
       }
     },
+    enabled: !!mainExpertId,
     select: (data) => {
         return data.consultations
     },
@@ -67,9 +82,11 @@ export function CustomerHomePage({ userData }: CustomerHomePageProps) {
   
   // Update available time slots when date or expert consultations change
   useEffect(() => {
-    if (date && expertConsultations) {
-      const slots = generateTimeSlots(date, expertConsultations);
-      console.log("slots", slots)
+    if (date) {
+      // If expertConsultations is undefined, pass an empty array to ensure slots are generated
+      const consultationsToUse = expertConsultations || [];
+      const slots = generateTimeSlots(date, consultationsToUse);
+      console.log("slots", slots);
       setAvailableTimeSlots(slots);
     }
   }, [date, expertConsultations]);
