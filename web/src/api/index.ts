@@ -95,8 +95,11 @@ interface UserRoleResponse extends ApiResponse<{ role: string }> {
 export class Api {
   private baseUrl: string;
 
-  constructor(baseUrl = 'http://localhost:3000') {
-    this.baseUrl = baseUrl;
+  constructor(baseUrl?: string) {
+    // Use provided baseUrl or default to /api
+    this.baseUrl = baseUrl || '/api';
+    
+    console.log('API base URL:', this.baseUrl);
   }
 
   // Helper method for API requests
