@@ -96,7 +96,7 @@ export class Api {
   private baseUrl: string;
 
   constructor(baseUrl?: string) {
-    // Use provided baseUrl or default to /api
+    // Use provided baseUrl or default to localhost for development
     this.baseUrl = baseUrl || '/api';
     
     console.log('API base URL:', this.baseUrl);
@@ -200,5 +200,8 @@ export class Api {
 }
 
 // Create and export a default API instance
-const api = new Api();
+// For local development, explicitly use localhost:3000
+// For production, the default '/api' will be used
+const isDevelopment = process.env.NODE_ENV === 'development';
+const api = new Api(isDevelopment ? 'http://localhost:3000' : undefined);
 export default api;
