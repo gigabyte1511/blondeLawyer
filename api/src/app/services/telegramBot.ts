@@ -1,6 +1,7 @@
 import TelegramBot from 'node-telegram-bot-api';
 import config from 'config';
 import User from '../models/User';
+import Consultation from '../models/Consultation';
 import { transaction, PartialModelObject } from 'objection';
 
 // Define bot types
@@ -141,6 +142,166 @@ class TelegramBotService {
       } catch (error) {
         console.error('Error handling /setexpert command:', error);
         await this.bot.sendMessage(chatId, 'Произошла ошибка при изменении роли. Пожалуйста, попробуйте позже.');
+      }
+    });
+
+    this.bot.onText(/\/notifyPreExpiredText/, async (msg) => {
+      const chatId = msg.chat.id;
+      const userId = msg.from?.id;
+      
+      if (!userId) {
+        console.error('No user ID found in message');
+        return;
+      }
+      
+      console.log(`Notify pre-expired consultation command received from user ${userId} in chat ${chatId}`);
+
+      try {
+        // Get consultation with ID 3 with related expert and customer
+        const consultation = await Consultation.query()
+          .findById(3)
+          .withGraphFetched('[expert, customer]');
+        
+        if (!consultation) {
+          await this.bot.sendMessage(chatId, 'Консультация с ID 3 не найдена.');
+          return;
+        }
+        
+        // Format date for display
+        const scheduledDate = new Date(consultation.scheduledFor);
+        const formattedDate = scheduledDate.toLocaleString('ru-RU', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        
+//         // Send notification to expert with ID 7880976819
+//         const expertTelegramId = '7880976819';
+//         const expertMessage = 
+//           `⚠️ НАПОМИНАНИЕ: Срок обращения #${consultation.id} истекает и вскоре оно будет отменено автоматически!
+
+// ` +
+//           `📅 Дата и время: ${formattedDate}
+// ` +
+//           `👤 Клиент: ${consultation.customer?.name || 'Неизвестно'}
+// ` +
+//           `📝 Тип: ${consultation.type}
+// ` +
+//           `🔄 Статус: ${consultation.status}
+
+// ` +
+//           `Пожалуйста, свяжитесь с клиентом или обновите статус обращения в приложении.`;
+        
+//         await this.sendNotification(expertTelegramId, expertMessage);
+        // console.log(`Sent pre-expired notification to expert ${expertTelegramId} for consultation #${consultation.id}`);
+        
+        // Send notification to customer with ID 554386866
+        const customerTelegramId = '554386866';
+        const customerMessage = 
+          `⚠️ НАПОМИНАНИЕ: Срок вашей консультации #${consultation.id} истекает!
+
+` +
+          `📅 Дата и время: ${formattedDate}
+` +
+          `👩‍⚖️ Юрист: ${consultation.expert?.name || 'Неизвестно'}
+` +
+          `📝 Тип: ${consultation.type}
+` +
+          `🔄 Статус: ${consultation.status}
+
+` +
+          `Если у вас остались вопросы, пожалуйста, свяжитесь с юристом или запишитесь на новую консультацию.`;
+        
+        await this.sendNotification(customerTelegramId, customerMessage);
+        console.log(`Sent pre-expired notification to customer ${customerTelegramId} for consultation #${consultation.id}`);
+        
+        // Confirm to the command sender
+        await this.bot.sendMessage(chatId, `Уведомления об истечении срока консультации #${consultation.id} отправлены эксперту и клиенту.`);
+      } catch (error) {
+        console.error('Error handling /notifyPreExpiredText command:', error);
+        await this.bot.sendMessage(chatId, 'Произошла ошибка при отправке уведомлений. Пожалуйста, попробуйте позже.');
+      }
+    });
+
+    this.bot.onText(/\/notifyExpiredText/, async (msg) => {
+      const chatId = msg.chat.id;
+      const userId = msg.from?.id;
+      
+      if (!userId) {
+        console.error('No user ID found in message');
+        return;
+      }
+      
+      console.log(`Notify expired consultation command received from user ${userId} in chat ${chatId}`);
+
+      try {
+        // Get consultation with ID 3 with related expert and customer
+        const consultation = await Consultation.query()
+          .findById(3)
+          .withGraphFetched('[expert, customer]');
+        
+        if (!consultation) {
+          await this.bot.sendMessage(chatId, 'Консультация с ID 3 не найдена.');
+          return;
+        }
+        
+        // Format date for display
+        const scheduledDate = new Date(consultation.scheduledFor);
+        const formattedDate = scheduledDate.toLocaleString('ru-RU', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        
+        // Send notification to expert with ID 7880976819
+        const expertTelegramId = '7880976819';
+//         const expertMessage = 
+//           `⛔ ВНИМАНИЕ: Срок консультации #${consultation.id} ИСТЕК!
+
+// ` +
+//           `📅 Дата и время: ${formattedDate}
+// ` +
+//           `👤 Клиент: ${consultation.customer?.name || 'Неизвестно'}
+// ` +
+//           `📝 Тип: ${consultation.type}
+// ` +
+//           `🔄 Статус: ${consultation.status}
+
+// ` +
+//           `Пожалуйста, обновите статус консультации на 'завершена' или свяжитесь с клиентом для переноса.`;
+        
+//         await this.sendNotification(expertTelegramId, expertMessage);
+//         console.log(`Sent expired notification to expert ${expertTelegramId} for consultation #${consultation.id}`);
+        
+        // Send notification to customer with ID 554386866
+        const customerTelegramId = '554386866';
+        const customerMessage = 
+          `⛔ ВНИМАНИЕ: Срок вашей консультации #${consultation.id} ИСТЕК!
+
+` +
+          `📅 Дата и время: ${formattedDate}
+` +
+          `👩‍⚖️ Юрист: ${consultation.expert?.name || 'Неизвестно'}
+` +
+          `📝 Тип: ${consultation.type}
+` +
+          `🔄 Статус: ${consultation.status}
+
+` +
+          `Если вы не успели получить консультацию, пожалуйста, свяжитесь с юристом или запишитесь на новую консультацию.`;
+        
+        await this.sendNotification(customerTelegramId, customerMessage);
+        console.log(`Sent expired notification to customer ${customerTelegramId} for consultation #${consultation.id}`);
+        
+        // Confirm to the command sender
+        await this.bot.sendMessage(chatId, `Уведомления о завершении срока консультации #${consultation.id} отправлены эксперту и клиенту.`);
+      } catch (error) {
+        console.error('Error handling /notifyExpiredText command:', error);
+        await this.bot.sendMessage(chatId, 'Произошла ошибка при отправке уведомлений. Пожалуйста, попробуйте позже.');
       }
     });
     
