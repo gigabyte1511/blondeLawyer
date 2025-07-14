@@ -266,7 +266,7 @@ class TelegramBotService {
         const expert = await User.query().findById(consultation.expertId);
         
         // Send notification to expert with ID 7880976819
-        const expertTelegramId = '554386866';
+        const expertTelegramId = '7880976819';
         const expertMessage = 
           `⛔ ВНИМАНИЕ: Срок рассмотрения обращения #${consultation.id} "${consultation.type}" ИСТЕК!
 
