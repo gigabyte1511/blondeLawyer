@@ -180,9 +180,9 @@ class TelegramBotService {
         });
         
         // Send notification to expert with ID 7880976819
-        const expertTelegramId = '554386866';
+        const expertTelegramId = '7880976819';
         const expertMessage = 
-          `⚠️ НАПОМИНАНИЕ: Срок обращения #${consultation.id} истекает и вскоре оно будет отменено автоматически!
+          `⚠️ НАПОМИНАНИЕ: Срок рассмотрения обращения #${consultation.id} "${consultation.type}" истекает и вскоре оно будет отменено автоматически!
 
 ` +
           `📅 Дата и время: ${formattedDate}
@@ -191,7 +191,7 @@ class TelegramBotService {
 ` +
           `📝 Тип: ${consultation.type}
 ` +
-          `🔄 Статус: ${consultation.status}
+          `🔄 Статус: Ожидает рассмотрения
 
 ` +
           `Пожалуйста, свяжитесь с клиентом или обновите статус обращения в приложении.`;
@@ -202,7 +202,7 @@ class TelegramBotService {
         // Send notification to customer with ID 554386866
         const customerTelegramId = '554386866';
         const customerMessage = 
-          `⚠️ НАПОМИНАНИЕ: Срок вашей консультации #${consultation.id} истекает!
+          `⚠️ НАПОМИНАНИЕ: Срок рассмотрения вашей консультации #${consultation.id} истекает!
 
 ` +
           `📅 Дата и время: ${formattedDate}
@@ -268,7 +268,7 @@ class TelegramBotService {
         // Send notification to expert with ID 7880976819
         const expertTelegramId = '554386866';
         const expertMessage = 
-          `⛔ ВНИМАНИЕ: Срок консультации #${consultation.id} ИСТЕК!
+          `⛔ ВНИМАНИЕ: Срок рассмотрения обращения #${consultation.id} "${consultation.type}" ИСТЕК!
 
 ` +
           `📅 Дата и время: ${formattedDate}
@@ -288,12 +288,12 @@ class TelegramBotService {
         // Send notification to customer with ID 554386866
         const customerTelegramId = '554386866';
         const customerMessage = 
-          `⛔ ВНИМАНИЕ: Срок вашей консультации #${consultation.id} ИСТЕК!
+          `⛔ ВНИМАНИЕ: Срок вашей консультации #${consultation.id} "${consultation.type}" ИСТЕК!
 
 ` +
           `📅 Дата и время: ${formattedDate}
 ` +
-          `👩‍⚖️ Юрист: ${consultation.expert?.name || 'Неизвестно'}
+          `👩‍⚖️ Юрист: ${expert?.name || 'Неизвестно'}
 ` +
           `📝 Тип: ${consultation.type}
 ` +
